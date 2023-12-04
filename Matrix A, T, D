@@ -1,0 +1,87 @@
+Aped = function(ped) {
+  if (length(which(ped[, 2] > ped[, 1])) == 0 & length(which(ped[, 3] > ped[, 1])) == 0) {
+    n_animals = nrow(ped)
+    A = matrix(0, n_animals, n_animals)
+    for (i in 1:n_animals) {
+      k = length(which(ped[i,] == 0))
+      if (k > 0) {
+        A[i, i] = 1
+      } else {
+        A[i, i] = 1 + 0.5 * A[ped[i, 2], ped[i, 3]]
+      }
+      for (j in 1:i) {
+        if (j < i) {
+          if (ped[i, 2] > 0 & ped[i, 3] > 0) {
+            A[j, i] = 0.5 * (A[j, ped[i, 2]] + A[j,ped[i,  3]])
+            A[i, j] = A[j, i]
+          } else if (ped[i, 2] > 0 & ped[i, 3] == 0) {
+            A[j, i] = 0.5 * (A[j, ped[i, 2]])
+            A[i, j] = A[j, i]
+          } else if (ped[i, 2] == 0 & ped[i, 3] > 0) {
+            A[j, i] = 0.5 * (A[j, ped[i, 3]])
+            A[i, j] = A[j, i]
+          } else {
+            A[j, i] = 0
+          }
+        }
+      }
+    }  
+    return(A)
+  } else {
+    print("Wrong data format!!! The order of individuals is incorrect.")
+  }    
+}
+
+Tped = function(ped) {
+  if (length(which(ped[, 2] > ped[, 1])) == 0 & length(which(ped[, 3] > ped[, 1])) == 0) {
+    n_animals = nrow(ped)
+    T = matrix(0, n_animals, n_animals)
+    for (i in 1:n_animals) {
+      T[i, i] = 1
+      for (j in 1:i) {
+        if (j < i) {
+          if (ped[i, 2] > 0 & ped[i, 3] > 0) {
+            T[j, i] = 0.5 * (T[j, ped[i, 2]] + T[j,ped[i,  3]])
+          } else if (ped[i, 2] > 0 & ped[i, 3] == 0) {
+            T[j, i] = 0.5 * (T[j, ped[i, 2]])
+          } else if (ped[i, 2] == 0 & ped[i, 3] > 0) {
+            T[j, i] = 0.5 * (T[j, ped[i, 3]])
+          } else {
+            T[j, i] = 0
+          }
+        }
+      }
+    }  
+    return(t(T))
+  } else {
+    print("Wrong data format!!! The order of individuals is incorrect.")
+  }    
+}
+
+Dped = function(ped, A){
+  n_animals = nrow(A)
+  D = c()
+  for (i in 1:n_animals) {
+    nS = ped[i, 2]
+    nD = ped[i, 3]  
+    if (nS > 0 & nD > 0) {  
+      D[i] = 0.5 - 0.25*((A[nS, nS] - 1) + (A[nD, nD] - 1))
+    } else if (nS > 0) {
+      D[i] = 0.75 - 0.25*(A[nS, nS] - 1)        
+    } else if (nD > 0) {
+      D[i] = 0.75 - 0.25*(A[nD, nD] - 1)        
+    } else {
+      D[i] = 1        
+    }
+  }
+  return(D)  
+}
+
+ped = cbind(1:6, 
+            c(0, 0, 1, 1, 4, 5), 
+            c(0, 0, 2, 0, 3, 2))
+
+A = Aped(ped)
+T = Tped(ped)
+D = Dped(ped, A)
+A - T%*%diag(D)%*%t(T)
